@@ -2,11 +2,26 @@
 using ExampleAPI.Contexts;
 using ExampleAPI.Repositories.Abstracts;
 using ExampleAPI.Repositories.Concretes;
+using TurkeyServices;
+using static TurkeyServices.KPSPublicSoapClient;
 
 var builder = WebApplication.CreateBuilder(args);
+using (KPSPublicSoapClient soapClient = new KPSPublicSoapClient(EndpointConfiguration.KPSPublicSoap12))
+{
+    var result = soapClient.TCKimlikNoDogrulaAsync(35392882385, "Hasan Ali", "Karttt", 1987);
+    if (result.Result.Body.TCKimlikNoDogrulaResult)
+    {
+        Console.WriteLine("Doğrulama başarılı");
+    }
+    else
+    {
+        Console.WriteLine("Doğrulama başarısız");
+    }
+  
+}
 
-// Add services to the container.
-builder.Services.AddDbContext<ExampleDbContext>();
+    // Add services to the container.
+    builder.Services.AddDbContext<ExampleDbContext>();
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

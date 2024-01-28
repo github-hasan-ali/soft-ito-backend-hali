@@ -6,7 +6,10 @@ using ExampleAPI.Entities;
 using ExampleAPI.Repositories.Abstracts;
 using ExampleAPI.Repositories.Concretes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.EntityFrameworkCore;
+using TurkeyServices;
+using static TurkeyServices.KPSPublicSoapClient;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -67,7 +70,20 @@ public class UsersController : Controller
     [HttpPost("Add")]
     public IActionResult Add([FromBody] User user)
     {
-        return Ok(_userRepository.Add(user));
+        using (KPSPublicSoapClient soapClient = new KPSPublicSoapClient(KPSPublicSoapClient.EndpointConfiguration.KPSPublicSoap12))
+        {
+            var result = soapClient.TCKimlikNoDogrulaAsync(Convert.ToInt64(user.IdentificationNumber), user.FirstName, user.LastName, user.BirthYear);
+            // sunucudan yanıt alana kadar bekler
+            result.Wait();
+            if (result.Result.Body.TCKimlikNoDogrulaResult)
+            {
+                return Ok(_userRepository.Add(user));
+            }
+            return BadRequest("Doğrulama başarısız kullanıcı eklenemedi lütfen tekrar deneyin.");
+
+        }
+
+      
     }
     [HttpPost("AddBalance")]
     public IActionResult Add([FromBody] AccountTransaction accountTransaction)
